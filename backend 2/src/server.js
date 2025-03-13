@@ -21,9 +21,6 @@ app.use((req, res, next) => {
   next();
 });
 
-// Direct test route
-app.get('/api/progress', (req, res) => res.json({ message: 'Direct progress works', mock: global.mockUserProgress }));
-
 let dbConnected = false;
 try {
   if (process.env.MONGO_URI && process.env.OFFLINE_MODE !== 'true') {
