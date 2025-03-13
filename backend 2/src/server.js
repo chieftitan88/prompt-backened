@@ -34,14 +34,12 @@ try {
 } catch (err) {
   logger.error('MongoDB connection error:', err.message);
   logger.info('Running in offline mode');
-}  // No extra ); here
+}
 
 app.use('/api', (req, res, next) => {
   logger.info('API route hit', { path: req.path });
   next();
 }, require('./routes/api'));
-
-app.use('/api', require('./routes/api'));
 
 app.get('/', (req, res) => res.send('API running'));
 
