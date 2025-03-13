@@ -1,0 +1,71 @@
+{
+  "detail": {
+    "name": "Detail Phase",
+    "key": "detail",
+    "description": "Learn to create comprehensive, specific prompts that leave little room for misinterpretation.",
+    "order": 1,
+    "validationRules": { "minWords": 20, "requiresConstraints": true },
+    "evaluationRubrics": {
+      "taskClarity": "Highest emphasis on explicit task instructions.",
+      "subjectSpecificity": "Strong emphasis on narrow, well-defined topics.",
+      "completeness": "Must include comprehensive details.",
+      "context": "Should specify audience, purpose, and format."
+    },
+    "tips": [
+      "Start by clearly stating the main task or question",
+      "Specify any constraints or requirements",
+      "Include relevant context and background information",
+      "Define the format or structure you want the response to follow",
+      "Be specific about the subject matter"
+    ],
+    "examples": [
+      "Create a comprehensive guide for first-time homebuyers in the United States in 2023. Include sections on mortgage pre-approval, down payment options, the house hunting process, making an offer, home inspections, closing costs, and post-purchase considerations. For each section, provide practical advice, potential pitfalls to avoid, and 2-3 actionable tips. The guide should be informative yet accessible to readers with no prior knowledge of real estate transactions. Format the guide with clear headings, bullet points where appropriate, and a summary of key points at the end."
+    ]
+  },
+  "concise": {
+    "name": "Concise Phase",
+    "key": "concise",
+    "description": "Master the art of brevity while maintaining clarity and effectiveness.",
+    "order": 2,
+    "validationRules": { "maxWords": 18, "singleSentence": true },
+    "evaluationRubrics": {
+      "taskClarity": "Focus on precision despite brevity.",
+      "subjectSpecificity": "Require precise topics without excessive detail.",
+      "completeness": "Include only essential information.",
+      "context": "Allow implied context if clear."
+    },
+    "tips": [
+      "Use precise, specific language",
+      "Eliminate unnecessary words and phrases",
+      "Focus on the most important requirements",
+      "Use bullet points for multiple requirements",
+      "Avoid redundancy and repetition"
+    ],
+    "examples": [
+      "Create a first-time homebuyer's guide for the US (2023). Cover: mortgage pre-approval, down payments, house hunting, offers, inspections, closing costs, and post-purchase tips. Include advice, pitfalls, and actionable tips for each section. Use clear headings and bullet points. End with a key points summary."
+    ]
+  },
+  "creative": {
+    "name": "Creative Phase",
+    "key": "creative",
+    "description": "Develop prompts that encourage innovative and unique responses while maintaining direction.",
+    "order": 3,
+    "validationRules": { "requiresCreativeElements": true },
+    "evaluationRubrics": {
+      "taskClarity": "Clear tasks allowing creative interpretation.",
+      "subjectSpecificity": "Focused but open-ended topics.",
+      "completeness": "Include creative constraints or direction.",
+      "context": "Encourage unusual or unexpected contexts."
+    },
+    "tips": [
+      "Use unusual perspectives or scenarios",
+      "Encourage exploration while providing clear boundaries",
+      "Ask for unexpected connections or analogies",
+      "Specify a unique tone or style",
+      "Balance creative freedom with specific requirements"
+    ],
+    "examples": [
+      "Imagine you're a time-traveling real estate agent from 2050 creating a guide for first-time homebuyers in 2023. With your future perspective, highlight the most crucial aspects of the home buying process that people often overlook. Include sections on mortgage options, property selection, negotiation tactics, and long-term considerations. Balance practical advice with forward-thinking insights, and incorporate unexpected analogies to make complex concepts accessible. Format as a conversational guide with a touch of humor."
+    ]
+  }
+} 

@@ -1,0 +1,6 @@
+{
+  "mongoURI": "mongodb://localhost:27017/prompt-engineering-app",
+  "jwtSecret": "your_jwt_secret_key",
+  "openaiApiKey": "your_openai_api_key",
+  "jwtExpiration": 3600
+} 
