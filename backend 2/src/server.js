@@ -21,6 +21,9 @@ app.use((req, res, next) => {
   next();
 });
 
+// Direct test route
+app.get('/api/progress', (req, res) => res.json({ message: 'Direct progress works', mock: global.mockUserProgress }));
+
 let dbConnected = false;
 try {
   if (process.env.MONGO_URI && process.env.OFFLINE_MODE !== 'true') {
@@ -34,9 +37,11 @@ try {
 } catch (err) {
   logger.error('MongoDB connection error:', err.message);
   logger.info('Running in offline mode');
-}
-app.get('/', (req, res) => res.send('API running'));
+});
+
 app.use('/api', require('./routes/api'));
+
+app.get('/', (req, res) => res.send('API running'));
 
 app.get('/health', (req, res) => {
   res.json({ 
