@@ -16,19 +16,14 @@ if (!global.mockUserProgress) {
   };
 }
 
-// Helper to check if we're in offline mode
+// Helper to check offline mode
 const isOfflineMode = () => process.env.OFFLINE_MODE === 'true';
 
 // Helper function to get the next phase
 function getNextPhase(currentPhase) {
   const phaseOrder = ['detail', 'concise', 'creative'];
   const currentIndex = phaseOrder.indexOf(currentPhase);
-  
-  if (currentIndex === -1 || currentIndex === phaseOrder.length - 1) {
-    return null; // No next phase
-  }
-  
-  return phaseOrder[currentIndex + 1];
+  return (currentIndex >= 0 && currentIndex < phaseOrder.length - 1) ? phaseOrder[currentIndex + 1] : null;
 }
 
 /**
@@ -38,24 +33,25 @@ function getNextPhase(currentPhase) {
  */
 exports.getProgress = async (req, res) => {
   try {
-    // Use mock data in offline mode
     if (isOfflineMode()) {
-      console.log('Returning mock progress data:', global.mockUserProgress);
+      console.log('Serving mock progress data:', global.mockUserProgress);
       return res.json(global.mockUserProgress);
     }
 
     const userId = 'test-user'; // Placeholder
     const user = await User.findOne({ userId });
     if (!user) {
+      console.log('User not found:', userId);
       return res.status(404).json({ error: 'User not found' });
     }
+    console.log('Serving user progress:', { currentPhase: user.currentPhase });
     res.json({
       currentPhase: user.currentPhase,
       phaseProgress: user.phaseProgress,
       onboardingCompleted: user.onboardingCompleted || false
     });
   } catch (error) {
-    console.error('Error in getProgress:', error);
+    console.error('Error in getProgress:', error.message);
     res.status(500).json({ error: 'Server error' });
   }
 };
@@ -68,45 +64,29 @@ exports.getProgress = async (req, res) => {
 exports.updateProgressAfterEvaluation = async (req, res) => {
   try {
     const { phase, score, userId } = req.body;
-    
-    // Validate inputs
     if (!phase || score === undefined) {
       return res.status(400).json({ msg: 'Please provide both phase and score' });
     }
     
     console.log('Progress update triggered:', { userId, phase, score });
-    
-    // Check if we're in offline mode
     const isOffline = isOfflineMode();
-    
-    // Get the next phase (if any)
     const nextPhase = getNextPhase(phase);
-    
     let phaseUnlocked = null;
     let updatedProgress;
-    
+
     if (isOffline) {
-      // Handle offline mode with mock data
       const progress = global.mockUserProgress;
-      
-      // Update the phase progress
       if (!progress.phaseProgress[phase]) {
         progress.phaseProgress[phase] = { attempts: 0, bestScore: 0, completed: false, locked: false };
       }
       
-      // Increment attempts
       progress.phaseProgress[phase].attempts += 1;
-      
-      // Update best score if the new score is higher
       if (score > progress.phaseProgress[phase].bestScore) {
         progress.phaseProgress[phase].bestScore = score;
       }
-      
-      // Check if the phase is completed (score >= 9.0)
       const isCompleted = score >= 9.0;
       progress.phaseProgress[phase].completed = isCompleted;
       
-      // If completed and there's a next phase, unlock it
       if (isCompleted && nextPhase && progress.phaseProgress[nextPhase]?.locked) {
         progress.phaseProgress[nextPhase].locked = false;
         phaseUnlocked = nextPhase;
@@ -119,48 +99,35 @@ exports.updateProgressAfterEvaluation = async (req, res) => {
         completed: progress.phaseProgress[phase].completed,
         phaseUnlocked
       };
-      
       console.log('Updated mock progress:', progress);
     } else {
-      // Handle database mode
-      // Find the user's progress
-      const progress = await Progress.findOne({ user: userId || req.user.id });
-      
+      const progress = await User.findOne({ userId: userId || 'test-user' });
       if (!progress) {
-        return res.status(404).json({ msg: 'Progress not found' });
+        return res.status(404).json({ msg: 'User not found' });
       }
       
-      // Update the phase progress
-      if (!progress.phases[phase]) {
-        progress.phases[phase] = { attempts: 0, bestScore: 0, completed: false };
+      if (!progress.phaseProgress[phase]) {
+        progress.phaseProgress[phase] = { attempts: 0, bestScore: 0, completed: false, locked: false };
       }
       
-      // Increment attempts
-      progress.phases[phase].attempts += 1;
-      
-      // Update best score if the new score is higher
-      if (score > progress.phases[phase].bestScore) {
-        progress.phases[phase].bestScore = score;
+      progress.phaseProgress[phase].attempts += 1;
+      if (score > progress.phaseProgress[phase].bestScore) {
+        progress.phaseProgress[phase].bestScore = score;
       }
-      
-      // Check if the phase is completed (score >= 9.0)
       const isCompleted = score >= 9.0;
-      progress.phases[phase].completed = isCompleted;
+      progress.phaseProgress[phase].completed = isCompleted;
       
-      // If completed and there's a next phase, unlock it
-      if (isCompleted && nextPhase && progress.phases[nextPhase]?.locked) {
-        progress.phases[nextPhase].locked = false;
+      if (isCompleted && nextPhase && progress.phaseProgress[nextPhase]?.locked) {
+        progress.phaseProgress[nextPhase].locked = false;
         phaseUnlocked = nextPhase;
       }
       
-      // Save the updated progress
       await progress.save();
-      
       updatedProgress = {
         phase,
-        attempts: progress.phases[phase].attempts,
-        bestScore: progress.phases[phase].bestScore,
-        completed: progress.phases[phase].completed,
+        attempts: progress.phaseProgress[phase].attempts,
+        bestScore: progress.phaseProgress[phase].bestScore,
+        completed: progress.phaseProgress[phase].completed,
         phaseUnlocked
       };
     }
@@ -173,12 +140,11 @@ exports.updateProgressAfterEvaluation = async (req, res) => {
 };
 
 /**
- * Update user progress
+ * Update user progress - Deprecated
  * @route POST /api/progress
  * @access Private
  */
 exports.updateProgress = async (req, res) => {
-  // Deprecated: Progress updates should occur in evaluatePrompt
   res.status(410).json({ error: 'This endpoint is deprecated; use /api/evaluate' });
 };
 
@@ -194,16 +160,11 @@ exports.changePhase = async (req, res) => {
       return res.status(400).json({ error: 'Valid phase is required' });
     }
 
-    // Use mock data in offline mode
     if (isOfflineMode()) {
-      // Check if phase is locked in mock data
       if (global.mockUserProgress.phaseProgress[phase].locked) {
         return res.status(403).json({ error: 'Phase is locked' });
       }
-      
-      // Update mock data
       global.mockUserProgress.currentPhase = phase;
-      
       console.log('Changed phase to:', phase);
       return res.json({
         currentPhase: global.mockUserProgress.currentPhase,
@@ -211,7 +172,7 @@ exports.changePhase = async (req, res) => {
       });
     }
 
-    const userId = 'test-user'; // Placeholder
+    const userId = 'test-user';
     const user = await User.findOne({ userId });
     if (!user) {
       return res.status(404).json({ error: 'User not found' });
@@ -238,19 +199,15 @@ exports.changePhase = async (req, res) => {
  */
 exports.completeOnboarding = async (req, res) => {
   try {
-    // Use mock data in offline mode
     if (isOfflineMode()) {
-      // Update mock data
       global.mockUserProgress.onboardingCompleted = true;
-      
       console.log('Onboarding completed');
       return res.json({
         onboardingCompleted: global.mockUserProgress.onboardingCompleted
       });
     }
     
-    const userId = 'test-user'; // Placeholder - in a real app, this would come from req.user.id
-    
+    const userId = 'test-user';
     const user = await User.findOneAndUpdate(
       { userId },
       { onboardingCompleted: true },
@@ -268,4 +225,4 @@ exports.completeOnboarding = async (req, res) => {
     console.error('Error in completeOnboarding:', error);
     res.status(500).json({ error: 'Server error' });
   }
-}; 
+};

@@ -35,7 +35,7 @@ try {
   logger.error('MongoDB connection error:', err.message);
   logger.info('Running in offline mode');
 }
-
+app.get('/', (req, res) => res.send('API running'));
 app.use('/api', require('./routes/api'));
 
 app.get('/health', (req, res) => {
